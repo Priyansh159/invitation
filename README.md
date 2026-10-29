@@ -27,7 +27,21 @@ npm run dev          # http://localhost:3000 and http://localhost:3000/admin
 
 Without `ADMIN_PASSWORD` the portal only accepts edits from the same computer.
 
-## Put it online
+## Put it online: Vercel
+
+`vercel.json` sets everything up. Vercel serves the built site from `dist/`, and `api/index.js` runs the server for `/`, `/i/<code>`, `/admin`, `/og/*` and `/api/*`.
+Vercel can't keep files, so the saved content goes to an **Upstash Redis** database.
+
+1. Vercel → this project → **Storage** → **Upstash for Redis** (free) → create it (region Mumbai if offered) → **Connect** it to this project.
+   This adds `KV_REST_API_URL` and `KV_REST_API_TOKEN` for you.
+2. Vercel → **Settings → Environment Variables**:
+   - `ADMIN_PASSWORD`: your portal password (required to edit).
+   - `GUEST_PASSWORD` (optional): the site starts locked with this guest password until you change it in the portal.
+3. Push to GitHub (or **Redeploy**). Then open `/admin` on your domain and copy the share links from there.
+
+Your computer's `data/` folder isn't uploaded, so the live site starts from `server/defaults.js` and keeps its own saved content in Redis.
+
+## Put it online: any Node host
 
 ```bash
 npm install
@@ -35,14 +49,8 @@ npm run build
 ADMIN_PASSWORD=choose-a-password npm start
 ```
 
-Settings (see `.env.example`):
-
-- `ADMIN_PASSWORD`: required to edit from anywhere.
-- `PORT`: most hosts set this for you.
-- `DATA_DIR`: where `invite.json` (content) and `access.json` (lock, guest password, share codes) are saved.
-  It must be on a **persistent disk or volume**, otherwise edits are lost when the host restarts.
-
-Hosts that work well: Railway (add a volume and set `DATA_DIR` to it), Render (with a disk), Fly.io (with a volume), or any VPS.
+`DATA_DIR` sets where `invite.json` (content) and `access.json` (lock, guest password, share codes) are saved.
+It must be on a **persistent disk or volume** (Railway volume, Render disk, a VPS).
 
 Anything missing from the saved content falls back to `server/defaults.js`.
 

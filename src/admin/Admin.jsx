@@ -324,6 +324,12 @@ export default function Admin() {
         </div>
       </header>
       {msg && <p className={`msg ${msg.type} floating`} role="status">{msg.text}</p>}
+      {status.storage === "none" && (
+        <p className="banner" role="alert">
+          <b>Changes can't be saved yet:</b> no database is connected. In Vercel open this project → Storage →
+          create an <b>Upstash for Redis</b> database, connect it to the project, then redeploy.
+        </p>
+      )}
 
       <div className="layout">
         <main className="form">
