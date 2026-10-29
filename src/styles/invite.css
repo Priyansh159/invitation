@@ -58,11 +58,12 @@ button { font: inherit; color: inherit; }
 /* ---------- Ambient backdrop (beside the card on wide screens) ---------- */
 .ambient {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background: url("/assets/scene.jpg") center / cover no-repeat;
+  background: url("/assets/ganesha-poster.jpg") center / cover no-repeat;
   filter: blur(42px) saturate(1.05) brightness(1.04);
   transform: scale(1.25);
   opacity: .55;
 }
+.is-open .ambient { background-image: url("/assets/scene.jpg"); }
 .ambient::after {
   content: ""; position: absolute; inset: 0;
   background: radial-gradient(ellipse at center, rgba(255, 244, 246, .2), rgba(241, 220, 223, .75));
@@ -72,7 +73,10 @@ button { font: inherit; color: inherit; }
    .scroller fills the screen and scrolls; .stage (the frame) sticks to its top
    while the invisible .page blocks underneath drive the snapping. */
 .scroller {
-  position: fixed; inset: 0; z-index: 1;
+  /* 1px taller than the screen on purpose: Chrome on Android treats a scroller
+     that exactly fills the screen as the page, and then hides/shows its address
+     bar while scrolling (the same jolt as iPhone). */
+  position: fixed; top: 0; left: 0; right: 0; bottom: -1px; z-index: 1;
   overflow-x: hidden; overflow-y: auto;
   scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
@@ -255,6 +259,10 @@ button { font: inherit; color: inherit; }
   pointer-events: none;
 }
 .ganesha.gone { display: none; }
+/* when the video is slow to start, the finished artwork fades in instead */
+.g-still { opacity: 0; transform: scale(1.04); transition: opacity 1s ease, transform 3s var(--ease-out); }
+.still-mode .g-still { opacity: 1; transform: none; }
+.still-mode .v-ganesha { visibility: hidden; }
 
 /* =========================================================
    PAGES 2–5 · typography

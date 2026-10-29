@@ -82,7 +82,7 @@ function EventPages({ ev, info, index, many, venueTba }) {
               {venue.address && <p className="venue-address" data-a style={{ "--d": ".6s" }}>{venue.address}</p>}
               {info.mapEmbed && (
                 <a className="map" data-a style={{ "--d": ".7s" }} href={info.directions} target="_blank" rel="noopener" aria-label="Open the venue in Google Maps">
-                  <iframe src={info.mapEmbed} title={`${ev.name} venue map`} loading="lazy" referrerPolicy="no-referrer-when-downgrade" tabIndex={-1} />
+                  <iframe data-src={info.mapEmbed} title={`${ev.name} venue map`} referrerPolicy="no-referrer-when-downgrade" tabIndex={-1} />
                 </a>
               )}
               {info.directions && (
@@ -127,9 +127,10 @@ export default function Invite({ invite }) {
       <div className="stage">
       <div className="viewport">
         <div className="frame">
-          <img className="layer still" src="/assets/scene.jpg" alt="" aria-hidden="true" />
-          <video className="layer v-loop" src="/assets/loop.mp4" poster="/assets/scene.jpg" muted playsInline loop preload="auto" aria-hidden="true" />
-          <video className="layer v-intro" src="/assets/intro.mp4" poster="/assets/arch.jpg" muted playsInline preload="auto" aria-hidden="true" />
+          {/* page one's artwork waits until the Ganesha video has the connection (engine.js) */}
+          <img className="layer still" data-src="/assets/scene.jpg" alt="" aria-hidden="true" />
+          <video className="layer v-loop" src="/assets/loop.mp4" data-poster="/assets/scene.jpg" muted playsInline loop preload="none" aria-hidden="true" />
+          <video className="layer v-intro" src="/assets/intro.mp4" data-poster="/assets/arch.jpg" muted playsInline preload="none" aria-hidden="true" />
           <img className="layer cover" src="/assets/couple-cover.webp" alt="" aria-hidden="true" />
 
           {/* Page 1 · the Canva design (shows the first event of this link) */}
@@ -201,12 +202,13 @@ export default function Invite({ invite }) {
           <div className="ganesha" aria-label="Shri Ganeshaya Namah">
             <video className="layer v-ganesha" src="/assets/ganesha.mp4" poster="/assets/ganesha-poster.jpg"
               muted playsInline autoPlay preload="auto" aria-hidden="true" />
+            <img className="layer g-still" src="/assets/ganesha-still.jpg" alt="" aria-hidden="true" />
           </div>
         </div>
 
         <button className="music" id="musicBtn" type="button" aria-label="Play music" hidden>
           <span className="bars"><i /><i /><i /><i /></span>
-          <span className="music-hint">Tap for music</span>
+          <span className="music-hint">Tap anywhere for music</span>
         </button>
       </div>
       </div>
@@ -220,7 +222,7 @@ export default function Invite({ invite }) {
       </div>
 
       <canvas id="petals" aria-hidden="true" />
-      <audio id="bgm" src={music.enabled ? music.src : undefined} loop preload="auto" />
+      <audio id="bgm" src={music.enabled ? music.src : undefined} loop preload="none" />
       <div className="edge edge-top" aria-hidden="true" />
       <div className="edge edge-bottom" aria-hidden="true" />
     </div>

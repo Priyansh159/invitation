@@ -28,6 +28,7 @@ export function startEngine(root, { isStatic, music }) {
   const safePlay = (v) => { const p = v.play(); if (p && p.catch) p.catch(() => {}); return p; };
 
   function useStills() {
+    showPageOneArt();
     body.classList.add("loop-on", "no-video");
     update();
   }
@@ -54,6 +55,9 @@ export function startEngine(root, { isStatic, music }) {
 
   function playIntro() {
     if (reduceMotion) { useStills(); return; }
+    // slow connection: the reveal video isn't ready, so open on the finished
+    // scene (the loop's poster has the couple and flowers) instead of a bare arch
+    if (vIntro.readyState < 3) { body.classList.add("loop-on"); startLoop(); return; }
     vIntro.currentTime = 0;
     const p = vIntro.play();
     if (p && p.catch) p.catch(useStills);
@@ -93,7 +97,8 @@ export function startEngine(root, { isStatic, music }) {
     }).catch(() => setMusicUi(false));
   }
 
-  const gestureEvents = ["pointerup", "touchend", "click", "keydown"];
+  // every kind of tap, click or key press counts (the first one the browser allows wins)
+  const gestureEvents = ["pointerdown", "mousedown", "pointerup", "touchend", "click", "keydown"];
   const onGesture = (e) => { if (!musicBtn.contains(e.target)) startMusic(); };
   function removeGestureListeners() {
     gestureEvents.forEach((t) => document.removeEventListener(t, onGesture, true));
@@ -141,6 +146,7 @@ export function startEngine(root, { isStatic, music }) {
       body.classList.add("is-open");
       body.classList.remove("locked");
       if (themeMeta) themeMeta.content = "#e8b994";   // browser bar matches the arch
+      startMusic();                                   // plays now if the browser allows it
       if (hasMusic) musicBtn.hidden = false;
       update();
       nudgeLater();
@@ -148,16 +154,44 @@ export function startEngine(root, { isStatic, music }) {
     later(() => ganesha.classList.add("gone"), 1700);
   }
 
+  // Ganesha gets the connection to itself first; page one's pictures and videos come after
+  function showPageOneArt() {
+    $$("img[data-src]").forEach((img) => { img.src = img.dataset.src; img.removeAttribute("data-src"); });
+    $$("video[data-poster]").forEach((v) => { v.poster = v.dataset.poster; v.removeAttribute("data-poster"); });
+  }
+  let queued = false;
+  function loadPageOne() {
+    if (queued) return;
+    queued = true;
+    showPageOneArt();
+    [vIntro, vLoop].forEach((v) => { v.preload = "auto"; v.load(); });
+  }
+
   function playGanesha() {
-    const showStill = () => { vGanesha.poster = "/assets/ganesha-still.jpg"; later(reveal, 2500); };
+    // Ganesha ji must appear quickly: if the video hasn't started within 1.2 s
+    // (slow signal, data saver, low-power mode), fade in the finished artwork instead.
+    let stillMode = false;
+    const showStill = () => {
+      if (stillMode || revealed) return;
+      stillMode = true;
+      vGanesha.pause();
+      ganesha.classList.add("still-mode");
+      loadPageOne();
+      later(reveal, 2800);
+    };
     if (reduceMotion) { showStill(); return; }
+    let started = false;
+    on(vGanesha, "playing", () => { started = true; }, { once: true });
+    later(() => { if (!started) showStill(); }, 1200);
+    on(vGanesha, "canplaythrough", loadPageOne, { once: true });
+    later(loadPageOne, 2500);
     on(vGanesha, "timeupdate", () => {
-      if (vGanesha.currentTime >= REVEAL_AT) reveal();
+      if (!stillMode && vGanesha.currentTime >= REVEAL_AT) reveal();
     });
     on(vGanesha, "ended", reveal);
     const p = vGanesha.play();
     if (p && p.catch) p.catch(showStill);
-    later(reveal, 10000);   // never keep guests waiting on a slow connection
+    later(reveal, 9000);   // never keep guests waiting
   }
 
   /* ---------- A gentle nudge: page one isn't the whole invitation ----------
@@ -191,6 +225,11 @@ export function startEngine(root, { isStatic, music }) {
       scene.style.opacity = o;
       scene.style.visibility = o > 0.001 ? "visible" : "hidden";
       scene.style.transform = o < 1 ? `translateY(${(-dist * 5).toFixed(2)}cqw) scale(${(1 - Math.abs(dist) * 0.03).toFixed(4)})` : "";
+    });
+
+    // Google Maps is heavy: load each map only when its page is near
+    scenes.forEach((scene, i) => {
+      if (Math.abs(p - i) < 1.5) scene.querySelectorAll("iframe[data-src]").forEach((f) => { f.src = f.dataset.src; f.removeAttribute("data-src"); });
     });
 
     // the swing & couple belong to page 1 only
@@ -230,6 +269,7 @@ export function startEngine(root, { isStatic, music }) {
     htmlClasses.push("static");
     body.classList.remove("locked");
     body.classList.add("is-open", "loop-on", "no-video");
+    showPageOneArt();
     ganesha.classList.add("gone");
     revealed = true;
     // ?static=1&page=venue (or #venue) previews a single page
@@ -245,7 +285,9 @@ export function startEngine(root, { isStatic, music }) {
     if (location.hash) history.replaceState(null, "", location.pathname + location.search);
     scroller.scrollTop = 0;
     playGanesha();
-    startMusic();
+    // A blocked play() still starts downloading the song and slows the opening,
+    // so try right away only if the guest has already touched the page (the password).
+    if (navigator.userActivation?.hasBeenActive) startMusic();
   }
   document.documentElement.classList.add(...htmlClasses);
   update();
