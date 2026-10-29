@@ -6,7 +6,48 @@
   <title>You're invited</title>
   <meta name="description" content="">
   <meta name="theme-color" content="#f4e9e8">
-  <style>html, body { margin: 0; background: #f4e9e8; }</style>
+  <style>
+    html, body { margin: 0; background: #f4e9e8; }
+    /* The lotus loader: shown from the very first moment until the invitation's
+       videos, pictures and fonts are ready (src/boot.js, src/invite/preload.js). */
+    #boot {
+      position: fixed; inset: 0; z-index: 100; overflow: hidden;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at 50% 45%, #fdf7f5 0%, #f6eaea 55%, #f0dfe0 100%);
+      transition: opacity .9s ease, visibility 0s linear .9s;
+    }
+    #boot.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+    #boot .lotus { width: min(46vw, 190px); height: auto; overflow: visible; animation: boot-in 1.2s ease-out both; }
+    #boot .p {
+      transform-box: view-box; transform-origin: 100px 112px;
+      animation: bloom 3.6s cubic-bezier(.45, 0, .25, 1) infinite;
+    }
+    #boot .back .p { animation-delay: -.25s; }
+    #boot .core { transform-box: view-box; transform-origin: 100px 104px; animation: core 3.6s ease-in-out infinite; }
+    #boot .ripple { transform-box: view-box; transform-origin: 100px 120px; animation: ripple 3.6s ease-out infinite; }
+    #boot .ripple.r2 { animation-delay: 1.8s; }
+    @keyframes bloom {
+      0%, 100% { transform: rotate(calc(var(--a) * .14)) scaleY(.9); }
+      50% { transform: rotate(var(--a)) scaleY(1); }
+    }
+    @keyframes core { 0%, 18%, 100% { opacity: 0; transform: scale(.4); } 50% { opacity: 1; transform: scale(1); } 82% { opacity: 0; transform: scale(.5); } }
+    @keyframes ripple { from { opacity: .55; transform: scale(.55); } to { opacity: 0; transform: scale(1.35); } }
+    #boot .bar {
+      width: min(40vw, 170px); height: 2px; margin-top: 22px;
+      border-radius: 2px; background: rgba(142, 7, 64, .1); overflow: hidden;
+      animation: boot-in 1.2s ease-out .3s both;
+    }
+    #boot .bar i {
+      display: block; height: 100%; width: calc(var(--p, 0) * 100%);
+      background: linear-gradient(90deg, #c39a5d, #8e0740); transition: width .5s ease;
+    }
+    #boot p {
+      margin: 14px 0 0; font: 10.5px/1.4 Georgia, serif; letter-spacing: .32em; text-transform: uppercase;
+      color: #a3486f; animation: boot-in 1.2s ease-out .5s both;
+    }
+    @keyframes boot-in { from { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { #boot .p, #boot .core, #boot .ripple { animation: none; transform: rotate(var(--a, 0deg)); } }
+  </style>
   <meta name="color-scheme" content="light">
 
   <!-- Link preview for WhatsApp / iMessage. Kept neutral here: the server fills
@@ -18,12 +59,45 @@
   <meta name="twitter:card" content="summary_large_image">
 
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%238e0740'/%3E%3Ctext x='32' y='41' font-family='Georgia,serif' font-size='22' text-anchor='middle' fill='%23f3d9a6'%3E%E2%9D%A6%3C/text%3E%3C/svg%3E">
-  <link rel="preload" as="image" href="/assets/ganesha-still.jpg" fetchpriority="low">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Monsieur+La+Doulaise&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
 </head>
 <body>
+  <div id="boot" role="progressbar" aria-label="Loading the invitation">
+    <svg class="lotus" viewBox="0 0 200 150" aria-hidden="true">
+      <defs>
+        <linearGradient id="lotus-back" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stop-color="#f9d3dc"/><stop offset=".6" stop-color="#f0a3b9"/><stop offset="1" stop-color="#e07b9b"/>
+        </linearGradient>
+        <linearGradient id="lotus-front" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stop-color="#fde6ea"/><stop offset=".5" stop-color="#f4a7bd"/><stop offset="1" stop-color="#d4507c"/>
+        </linearGradient>
+        <radialGradient id="lotus-core"><stop offset="0" stop-color="#ffe9a8"/><stop offset="1" stop-color="#e6b04f"/></radialGradient>
+        <g id="petal">
+          <path d="M100 112 C 82 92 82 60 100 34 C 118 60 118 92 100 112 Z"/>
+          <path d="M100 106 C 98 86 98 64 100 44" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="1.2" stroke-linecap="round"/>
+        </g>
+      </defs>
+      <ellipse class="ripple" cx="100" cy="120" rx="70" ry="9" fill="none" stroke="#9cc4cf" stroke-width="1.2"/>
+      <ellipse class="ripple r2" cx="100" cy="120" rx="70" ry="9" fill="none" stroke="#9cc4cf" stroke-width="1.2"/>
+      <g class="back" fill="url(#lotus-back)">
+        <use class="p" href="#petal" style="--a:-74deg"/>
+        <use class="p" href="#petal" style="--a:74deg"/>
+        <use class="p" href="#petal" style="--a:-48deg"/>
+        <use class="p" href="#petal" style="--a:48deg"/>
+      </g>
+      <circle class="core" cx="100" cy="104" r="9" fill="url(#lotus-core)"/>
+      <g class="front" fill="url(#lotus-front)">
+        <use class="p" href="#petal" style="--a:-26deg"/>
+        <use class="p" href="#petal" style="--a:26deg"/>
+        <use class="p" href="#petal" style="--a:0deg"/>
+      </g>
+      <path d="M58 118 C 76 126 124 126 142 118" fill="none" stroke="#7fa98a" stroke-width="2.4" stroke-linecap="round" opacity=".75"/>
+    </svg>
+    <div class="bar"><i></i></div>
+    <p>Preparing your invitation</p>
+  </div>
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
 </body>

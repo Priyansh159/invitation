@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { eventInfo, signDate, whatsappLink } from "../content/format.js";
 import { startEngine } from "./engine.js";
+import { boot } from "../boot.js";
 import "../styles/invite.css";
 
 const Lines = ({ text }) =>
@@ -101,7 +102,16 @@ function EventPages({ ev, info, index, many, venueTba }) {
 }
 
 /* invite.events holds only the events this link may show, in order. */
-export default function Invite({ invite }) {
+// media: local copies downloaded behind the loader (src/invite/preload.js); falls back to the files
+const FALLBACK = {
+  ganesha: "/assets/ganesha.mp4", intro: "/assets/intro.mp4", loop: "/assets/loop.mp4",
+  ganeshaStill: "/assets/ganesha-still.jpg", ganeshaPoster: "/assets/ganesha-poster.jpg",
+  scene: "/assets/scene.jpg", arch: "/assets/arch.jpg", cover: "/assets/couple-cover.webp",
+};
+
+export default function Invite({ invite, media }) {
+  const m = { ...FALLBACK, ...media };
+  const ready = Boolean(media);   // everything is already downloaded
   const root = useRef(null);
   const { couple, hero, events, saveTheDate, closing, music } = invite;
   const infos = useMemo(() => events.map(eventInfo), [events]);
@@ -113,7 +123,11 @@ export default function Invite({ invite }) {
   // page ids, in scroll order (also used by ?static=1&page=...)
   const pageIds = ["top", "save-the-date", ...events.flatMap((e) => [e.key, `${e.key}-venue`]), "rsvp"];
 
-  useEffect(() => startEngine(root.current, { isStatic, music }), []);
+  useEffect(() => {
+    const stop = startEngine(root.current, { isStatic, music });
+    boot.hide();   // the lotus loader fades as Ganesha ji's page begins
+    return stop;
+  }, []);
   useEffect(() => { document.title = invite.share.title; }, [invite.share.title]);
 
   const twoDigitDay = info.day >= 10;
@@ -128,10 +142,10 @@ export default function Invite({ invite }) {
       <div className="viewport">
         <div className="frame">
           {/* page one's artwork waits until the Ganesha video has the connection (engine.js) */}
-          <img className="layer still" data-src="/assets/scene.jpg" alt="" aria-hidden="true" />
-          <video className="layer v-loop" src="/assets/loop.mp4" data-poster="/assets/scene.jpg" muted playsInline loop preload="none" aria-hidden="true" />
-          <video className="layer v-intro" src="/assets/intro.mp4" data-poster="/assets/arch.jpg" muted playsInline preload="none" aria-hidden="true" />
-          <img className="layer cover" src="/assets/couple-cover.webp" alt="" aria-hidden="true" />
+          <img className="layer still" data-src={m.scene} alt="" aria-hidden="true" />
+          <video className="layer v-loop" src={m.loop} data-poster={m.scene} muted playsInline loop preload={ready ? "auto" : "none"} aria-hidden="true" />
+          <video className="layer v-intro" src={m.intro} data-poster={m.arch} muted playsInline preload={ready ? "auto" : "none"} aria-hidden="true" />
+          <img className="layer cover" src={m.cover} alt="" aria-hidden="true" />
 
           {/* Page 1 · the Canva design (shows the first event of this link) */}
           <div className="scene scene-hero" data-scene="0">
@@ -200,9 +214,9 @@ export default function Invite({ invite }) {
 
           {/* Opening · Shri Ganeshaya Namah, then page one */}
           <div className="ganesha" aria-label="Shri Ganeshaya Namah">
-            <video className="layer v-ganesha" src="/assets/ganesha.mp4" poster="/assets/ganesha-poster.jpg"
+            <video className="layer v-ganesha" src={m.ganesha} poster={m.ganeshaPoster}
               muted playsInline autoPlay preload="auto" aria-hidden="true" />
-            <img className="layer g-still" src="/assets/ganesha-still.jpg" alt="" aria-hidden="true" />
+            <img className="layer g-still" src={m.ganeshaStill} alt="" aria-hidden="true" />
           </div>
         </div>
 
