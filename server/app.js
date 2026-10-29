@@ -141,7 +141,7 @@ export function createApp({ getHtml, staticFiles }) {
   // guests: only what their link allows, and nothing at all while locked without the password
   app.get("/api/invite", async (req, res, next) => {
     try {
-      const access = await readAccess();
+      const [access, saved] = await Promise.all([readAccess(), readInvite()]);
       if (access.locked) {
         const given = Boolean(req.get("x-view-password"));
         // opening the lock screen isn't a wrong guess, so only count real attempts
@@ -155,7 +155,7 @@ export function createApp({ getHtml, staticFiles }) {
       }
       const view = viewFor(String(req.query.link || ""), access);
       if (!view) return res.status(404).json({ error: "This invitation link isn't valid. Please check the link you were sent." });
-      const invite = publicView(await readInvite(), view);
+      const invite = publicView(saved, view);
       if (!invite.events.length) return res.status(404).json({ error: "This invitation isn't available yet." });
       res.json(invite);
     } catch (err) { next(err); }

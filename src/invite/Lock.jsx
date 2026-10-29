@@ -20,6 +20,9 @@ export default function Lock({ onSubmit, error: initialError = "", message = "" 
   return (
     <div className="invite">
       <div className="ambient lock-ambient" aria-hidden="true" />
+      <div className="edge edge-top" aria-hidden="true" />
+      <div className="edge edge-bottom" aria-hidden="true" />
+      <div className="stage fixed">
       <div className="viewport">
         <div className="frame">
           <img className="layer" src="/assets/ganesha-poster.jpg" alt="" aria-hidden="true" />
@@ -40,6 +43,7 @@ export default function Lock({ onSubmit, error: initialError = "", message = "" 
             )}
           </main>
         </div>
+      </div>
       </div>
     </div>
   );

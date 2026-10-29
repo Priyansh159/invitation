@@ -125,8 +125,10 @@ export function startEngine(root, { isStatic, music }) {
   cleanups.push(petals.stop);
 
   /* ---------- Opening: Shri Ganesh first, then page one ---------- */
+  const REVEAL_AT = 3.5;   // seconds into the Ganesha video (Ganesha is fully drawn by 2.8 s)
   const ganesha = $(".ganesha");
   const vGanesha = $(".v-ganesha");
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
   let revealed = false;
 
   function reveal() {
@@ -138,22 +140,34 @@ export function startEngine(root, { isStatic, music }) {
       petals.start();
       body.classList.add("is-open");
       body.classList.remove("locked");
+      if (themeMeta) themeMeta.content = "#e8b994";   // browser bar matches the arch
       if (hasMusic) musicBtn.hidden = false;
       update();
-    }, 350);
-    later(() => ganesha.classList.add("gone"), 2000);
+      nudgeLater();
+    }, 300);
+    later(() => ganesha.classList.add("gone"), 1700);
   }
 
   function playGanesha() {
-    const showStill = () => { vGanesha.poster = "/assets/ganesha-still.jpg"; later(reveal, 3500); };
+    const showStill = () => { vGanesha.poster = "/assets/ganesha-still.jpg"; later(reveal, 2500); };
     if (reduceMotion) { showStill(); return; }
     on(vGanesha, "timeupdate", () => {
-      if (vGanesha.duration && vGanesha.currentTime >= vGanesha.duration - 0.6) reveal();
+      if (vGanesha.currentTime >= REVEAL_AT) reveal();
     });
     on(vGanesha, "ended", reveal);
     const p = vGanesha.play();
     if (p && p.catch) p.catch(showStill);
-    later(reveal, 12000);   // never keep guests waiting on a slow connection
+    later(reveal, 10000);   // never keep guests waiting on a slow connection
+  }
+
+  /* ---------- A gentle nudge: page one isn't the whole invitation ----------
+     If a guest hasn't scrolled 15 s after page one appears, glide to page two. */
+  let nudge = 0;
+  const cancelNudge = () => { clearTimeout(nudge); nudge = 0; };
+  function nudgeLater() {
+    if (isStatic) return;
+    nudge = setTimeout(() => { nudge = 0; if (current === 0) goTo(1); }, 15000);
+    cleanups.push(cancelNudge);
   }
 
   /* ---------- Pages: scroll-linked cross-fade inside the fixed frame ---------- */
@@ -163,12 +177,13 @@ export function startEngine(root, { isStatic, music }) {
   let current = -1;
   let ticking = false;
 
-  const pageHeight = () => (pages[1] ? pages[1].offsetTop - pages[0].offsetTop : innerHeight) || innerHeight;
+  const scroller = $(".scroller");
+  const pageHeight = () => (pages[1] ? pages[1].offsetTop - pages[0].offsetTop : scroller.clientHeight) || scroller.clientHeight;
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
   function update() {
     ticking = false;
-    const p = clamp(scrollY / pageHeight(), 0, last);
+    const p = clamp(scroller.scrollTop / pageHeight(), 0, last);
 
     scenes.forEach((scene, i) => {
       const dist = p - i;
@@ -191,16 +206,19 @@ export function startEngine(root, { isStatic, music }) {
     }
   }
 
-  on(window, "scroll", () => {
+  on(scroller, "scroll", () => {
     if (!ticking) { ticking = true; requestAnimationFrame(update); }
   }, { passive: true });
   on(window, "resize", update);
+  // any sign of the guest moving around cancels the nudge
+  ["touchstart", "wheel", "pointerdown"].forEach((t) => on(scroller, t, cancelNudge, { passive: true }));
 
-  const goTo = (i) => window.scrollTo({ top: clamp(i, 0, last) * pageHeight(), behavior: reduceMotion ? "auto" : "smooth" });
+  const goTo = (i) => scroller.scrollTo({ top: clamp(i, 0, last) * pageHeight(), behavior: reduceMotion ? "auto" : "smooth" });
   $$("[data-go]").forEach((b) => on(b, "click", () => goTo(+b.dataset.go)));
 
   on(window, "keydown", (e) => {
     if (!revealed) return;
+    cancelNudge();
     if (e.target.closest && e.target.closest("a, button, input, textarea")) return;
     if (["ArrowDown", "PageDown", " "].includes(e.key)) { e.preventDefault(); goTo(current + 1); }
     if (["ArrowUp", "PageUp"].includes(e.key)) { e.preventDefault(); goTo(current - 1); }
@@ -218,14 +236,14 @@ export function startEngine(root, { isStatic, music }) {
     const want = new URLSearchParams(location.search).get("page") || location.hash.slice(1);
     const target = want && root.querySelector(`[data-page="${CSS.escape(want)}"]`);
     requestAnimationFrame(() => {
-      if (target) window.scrollTo(0, target.offsetTop);
+      if (target) scroller.scrollTop = target.offsetTop;
       update();
     });
   } else {
     body.classList.add("locked");
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
     if (location.hash) history.replaceState(null, "", location.pathname + location.search);
-    window.scrollTo(0, 0);
+    scroller.scrollTop = 0;
     playGanesha();
     startMusic();
   }

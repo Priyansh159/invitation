@@ -122,7 +122,9 @@ export default function Invite({ invite }) {
     <div className="invite" ref={root}>
       <div className="ambient" aria-hidden="true" />
 
+      <div className="scroller">
       {/* ===================== THE FIXED FRAME ===================== */}
+      <div className="stage">
       <div className="viewport">
         <div className="frame">
           <img className="layer still" src="/assets/scene.jpg" alt="" aria-hidden="true" />
@@ -132,20 +134,20 @@ export default function Invite({ invite }) {
 
           {/* Page 1 · the Canva design (shows the first event of this link) */}
           <div className="scene scene-hero" data-scene="0">
-            <p className="t-together intro" style={{ "--d": ".2s" }}>{hero.together}</p>
+            <p className="t-together intro" style={{ "--d": ".15s" }}>{hero.together}</p>
             <h1 className="sr-only">{couple.groom} and {couple.bride}</h1>
-            <span className="t-name t-groom intro write" style={{ "--d": ".7s" }} aria-hidden="true">{couple.groom}</span>
-            <span className="t-and intro" style={{ "--d": "1.9s" }} aria-hidden="true">and</span>
-            <span className="t-name t-bride intro write" style={{ "--d": "2.2s" }} aria-hidden="true">{couple.bride}</span>
-            <p className="t-invite intro" style={{ "--d": "3.3s" }}><Lines text={lead.heroLine} /></p>
-            <div className={`t-date intro${twoDigitDay ? " two" : ""}`} style={{ "--d": "3.8s" }} aria-label={info.longDate}>
+            <span className="t-name t-groom intro write" style={{ "--d": ".5s" }} aria-hidden="true">{couple.groom}</span>
+            <span className="t-and intro" style={{ "--d": "1.3s" }} aria-hidden="true">and</span>
+            <span className="t-name t-bride intro write" style={{ "--d": "1.55s" }} aria-hidden="true">{couple.bride}</span>
+            <p className="t-invite intro" style={{ "--d": "2.3s" }}><Lines text={lead.heroLine} /></p>
+            <div className={`t-date intro${twoDigitDay ? " two" : ""}`} style={{ "--d": "2.65s" }} aria-label={info.longDate}>
               <span className="t-dec">{info.monthShort}</span>
               <span className="t-bar t-bar-l" />
               <span className="t-six">{info.day}<span className="t-th">{info.dayOrdinal}</span></span>
               <span className="t-bar t-bar-r" />
               <span className="t-year">{info.year}</span>
             </div>
-            <button className="scroll-cue intro" style={{ "--d": "4.6s" }} type="button" data-go="1" aria-label="Next page">
+            <button className="scroll-cue intro" style={{ "--d": "3.2s" }} type="button" data-go="1" aria-label="Next page">
               <span>Scroll</span><i />
             </button>
           </div>
@@ -207,9 +209,7 @@ export default function Invite({ invite }) {
           <span className="music-hint">Tap for music</span>
         </button>
       </div>
-
-      <canvas id="petals" aria-hidden="true" />
-      <audio id="bgm" src={music.enabled ? music.src : undefined} loop preload="auto" />
+      </div>
 
       {/* Scroll pages: each one snaps into place; the frame above stays fixed */}
       <main className="pages" aria-hidden="true">
@@ -217,6 +217,12 @@ export default function Invite({ invite }) {
           <section className="page" key={id} data-page={id} />
         ))}
       </main>
+      </div>
+
+      <canvas id="petals" aria-hidden="true" />
+      <audio id="bgm" src={music.enabled ? music.src : undefined} loop preload="auto" />
+      <div className="edge edge-top" aria-hidden="true" />
+      <div className="edge edge-bottom" aria-hidden="true" />
     </div>
   );
 }

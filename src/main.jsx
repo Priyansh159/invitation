@@ -3,7 +3,11 @@ import { createRoot } from "react-dom/client";
 import { adminData, loadInvite } from "./api.js";
 import { publicView } from "./content/view.js";
 
-const Invite = lazy(() => import("./invite/Invite.jsx"));
+const isAdmin = location.pathname.replace(/\/+$/, "").endsWith("/admin");
+
+// start downloading the invitation's code right away, alongside its details
+const inviteCode = isAdmin ? null : import("./invite/Invite.jsx");
+const Invite = lazy(() => inviteCode || import("./invite/Invite.jsx"));
 const Lock = lazy(() => import("./invite/Lock.jsx"));
 const Admin = lazy(() => import("./admin/Admin.jsx"));
 
@@ -46,8 +50,6 @@ function InvitePage() {
     />
   );
 }
-
-const isAdmin = location.pathname.replace(/\/+$/, "").endsWith("/admin");
 
 createRoot(document.getElementById("root")).render(
   <Suspense fallback={null}>
