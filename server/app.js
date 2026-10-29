@@ -11,7 +11,7 @@ import crypto from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DEFAULT_ACCESS, DEFAULT_INVITE, mergeInvite, migrateInvite } from "./defaults.js";
-import { createStore, storeKind } from "./store.js";
+import { createStore, storageHints, storeKind } from "./store.js";
 import { publicView, VIEWS } from "../src/content/view.js";
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -170,8 +170,13 @@ export function createApp({ getHtml, staticFiles }) {
 
   app.get("/api/admin/data", async (req, res, next) => {
     if (!canEdit(req, res)) return;
-    try { res.json({ invite: await readInvite(), access: await readAccess() }); }
-    catch (err) { next(err); }
+    try {
+      res.json({
+        invite: await readInvite(),
+        access: await readAccess(),
+        ...(storeKind === "none" ? { storageHints: storageHints() } : {}),
+      });
+    } catch (err) { next(err); }
   });
 
   app.put("/api/invite", express.json({ limit: "200kb" }), async (req, res) => {

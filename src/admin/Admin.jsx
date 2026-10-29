@@ -196,6 +196,7 @@ export default function Admin() {
   const [access, setAccess] = useState(null);
   const [msg, setMsg] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [hints, setHints] = useState(null);
   const [previewView, setPreviewView] = useState("both");
   const [previewPage, setPreviewPage] = useState("top");
   const [previewKey, setPreviewKey] = useState(0);
@@ -217,9 +218,10 @@ export default function Admin() {
 
   useEffect(() => {
     if (!authed) return;
-    adminData().then(({ invite, access }) => {
+    adminData().then(({ invite, access, storageHints }) => {
       setSaved(invite); setDraft(invite);
       setSavedAccess(access); setAccess(access);
+      setHints(storageHints || null);
     }).catch((err) => setMsg({ type: "error", text: err.message }));
   }, [authed]);
 
@@ -326,8 +328,14 @@ export default function Admin() {
       {msg && <p className={`msg ${msg.type} floating`} role="status">{msg.text}</p>}
       {status.storage === "none" && (
         <p className="banner" role="alert">
-          <b>Changes can't be saved yet:</b> no database is connected. In Vercel open this project → Storage →
-          create an <b>Upstash for Redis</b> database, connect it to the project, then redeploy.
+          <b>Changes can't be saved yet:</b> this deployment can't see a database. In Vercel open this project → Storage →
+          create an <b>Upstash for Redis</b> database and connect it to the project, then go to Deployments → ⋯ → <b>Redeploy</b>.
+          <br />
+          <small>
+            Database settings this deployment can see:{" "}
+            {hints && hints.length ? hints.map((h) => <code key={h}>{h}</code>).reduce((a, b) => [a, ", ", b]) : <b>none</b>}
+            {hints && !hints.length && " (if the database is already connected, it was connected after this deploy, so redeploy)."}
+          </small>
         </p>
       )}
 
