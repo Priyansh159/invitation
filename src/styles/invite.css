@@ -1,0 +1,409 @@
+/* =========================================================
+   Priyansh & Ayushi · Wedding invitation
+   Theme taken from the Canva design: wine text (#8e0740),
+   peach jharokha arch, blush wall, lotus-pond blue.
+   ========================================================= */
+
+:root {
+  --wine: #8e0740;
+  --wine-soft: #a3486f;
+  --gold: #c39a5d;
+  --gold-soft: #e9d29f;
+  --blush: #f6e2e6;
+  --cream: #fff8f3;
+
+  --f-script: "Monsieur La Doulaise", "Great Vibes", cursive;
+  --f-serif: "Playfair Display", Georgia, "Times New Roman", serif;
+  --f-caps: "Cinzel", Georgia, serif;
+
+  /* The invitation is a 9:16 card, exactly like the Canva design.
+     Phones: full screen. Wider screens: a centred card. */
+  --stage-w: min(100vw, max(calc(100vh * 9 / 16), 420px));
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --ease-io: cubic-bezier(.65, 0, .35, 1);
+}
+@supports (height: 100svh) {
+  :root { --stage-w: min(100vw, max(calc(100svh * 9 / 16), 420px)); }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+html.invite-page {
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: #f1dcdf;
+  color: var(--wine);
+  font-family: var(--f-serif);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+body.locked { overflow: hidden; }
+
+img, video { display: block; max-width: 100%; }
+[hidden] { display: none !important; }
+button { font: inherit; color: inherit; }
+
+.sr-only {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ---------- Ambient backdrop (beside the card on wide screens) ---------- */
+.ambient {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: url("/assets/scene.jpg") center / cover no-repeat;
+  filter: blur(42px) saturate(1.05) brightness(1.04);
+  transform: scale(1.25);
+  opacity: .55;
+}
+.ambient::after {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, rgba(255, 244, 246, .2), rgba(241, 220, 223, .75));
+}
+
+/* ---------- Scroll pages (invisible; they drive the snapping) ---------- */
+.pages { position: relative; z-index: 0; }
+.page {
+  height: 100vh; height: 100svh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* =========================================================
+   FIXED FRAME
+   ========================================================= */
+.viewport {
+  position: fixed; top: 0; bottom: 0; left: 50%; z-index: 1;
+  width: var(--stage-w);
+  transform: translateX(-50%);
+  overflow: hidden;
+  background: var(--blush);
+  box-shadow: 0 0 90px rgba(142, 7, 64, .16);
+  container-type: size;
+}
+
+/* .frame is always the exact 9:16 box of the Canva artwork (cover-fitted),
+   so everything placed in cqw lines up with the design on every screen. */
+.frame {
+  position: absolute; left: 50%; top: 50%;
+  width: max(100cqw, calc(100cqh * 9 / 16));
+  aspect-ratio: 9 / 16;
+  transform: translate(-50%, -50%);
+  container-type: inline-size;
+}
+.layer { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.v-intro { transition: opacity .3s linear; }
+.loop-on .v-intro { opacity: 0; pointer-events: none; }
+.no-video .v-intro, .no-video .v-loop { display: none; }
+/* bare arch over the swing & couple only; faded in after page 1 */
+.cover { opacity: 0; pointer-events: none; will-change: opacity; }
+
+/* ---------- Scenes ---------- */
+.scene {
+  position: absolute; inset: 0; z-index: 2;
+  pointer-events: none;
+  will-change: opacity, transform;
+}
+.scene.active { pointer-events: auto; }
+.scene:not(.scene-hero) { opacity: 0; visibility: hidden; }
+
+/* safe area inside the arch, clear of the lilies and the pond */
+.safe {
+  position: absolute; left: 15%; right: 15%; top: 20%; bottom: 20%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+}
+
+/* per-element entrance whenever a page becomes active */
+[data-a] {
+  opacity: 0; transform: translateY(3cqw); filter: blur(5px);
+  transition: opacity .5s ease, transform .6s ease, filter .5s ease, clip-path .5s ease;
+}
+[data-a="write"] { transform: none; filter: none; clip-path: inset(-40% 100% -40% -10%); }
+[data-a="rule"] { transform: scaleX(0); filter: none; }
+.scene.active [data-a] {
+  opacity: 1; transform: none; filter: none;
+  transition: opacity 1s ease var(--d, 0s), transform 1.2s var(--ease-out) var(--d, 0s),
+              filter 1s ease var(--d, 0s), clip-path 1.8s var(--ease-io) var(--d, 0s);
+}
+.scene.active [data-a="write"] { clip-path: inset(-40% -10% -40% -10%); }
+
+/* =========================================================
+   PAGE 1 · positions mirror the Canva layout (1080 × 1920)
+   ========================================================= */
+.scene-hero > * {
+  position: absolute; left: 50%; margin: 0;
+  transform: translateX(-50%);
+  white-space: nowrap; text-align: center;
+  color: var(--wine);
+  text-shadow: 0 0 1.4cqw rgba(255, 246, 248, .65);
+}
+.t-together {
+  top: 24.9cqw;
+  font-family: var(--f-serif); font-weight: 500;
+  font-size: 2.85cqw; letter-spacing: .01em;
+}
+.t-name {
+  font-family: var(--f-script); font-weight: 400;
+  line-height: 1; padding: 0 3cqw;
+  -webkit-text-stroke: .12cqw currentColor;
+}
+.t-groom { top: 30.2cqw; left: 40.6cqw; font-size: 15.6cqw; }
+.t-and   { top: 48.6cqw; left: 32.5cqw; font-family: var(--f-serif); font-weight: 500; font-size: 3.35cqw; }
+.t-bride { top: 47cqw; left: 57.8cqw; font-size: 15cqw; }
+.t-invite {
+  top: 64cqw;
+  font-family: var(--f-serif); font-weight: 500;
+  font-size: 2.95cqw; line-height: 1.16;
+}
+.scene-hero > .t-date { top: 72cqw; left: 0; width: 100%; height: 14cqw; transform: none; }
+.t-date > span { position: absolute; font-family: var(--f-serif); font-weight: 500; line-height: 1; }
+.t-dec, .t-year { top: 4.8cqw; font-size: 3.5cqw; letter-spacing: .08em; transform: translateX(-50%); }
+.t-dec  { left: 29.6cqw; }
+.t-year { left: 70.6cqw; }
+.t-six  { left: 49.4cqw; top: 1.4cqw; font-size: 11.2cqw; transform: translateX(-50%); }
+.t-th   { position: absolute; left: 100%; top: 1.6cqw; margin-left: .5cqw; font-size: 2.3cqw; letter-spacing: .04em; }
+.two .t-six { left: 48.4cqw; }
+.two .t-dec  { left: 26.6cqw; }
+.two .t-year { left: 73.6cqw; }
+.two .t-bar-l { left: 36.4cqw; }
+.two .t-bar-r { left: 63.4cqw; }
+.t-bar  { top: 2.6cqw; width: 1px; height: 7.6cqw; background: var(--wine); opacity: .7; }
+.t-bar-l { left: 39.2cqw; }
+.t-bar-r { left: 60.6cqw; }
+
+/* intro (first open only) */
+.intro {
+  opacity: 0;
+  filter: blur(6px);
+  translate: 0 1.6cqw;
+  transition:
+    opacity 1.1s ease var(--d, 0s),
+    filter 1.1s ease var(--d, 0s),
+    translate 1.4s var(--ease-out) var(--d, 0s),
+    clip-path 2s var(--ease-io) var(--d, 0s);
+}
+.intro.write { translate: none; filter: none; clip-path: inset(-40% 100% -40% -20%); }
+.is-open .intro { opacity: 1; filter: none; translate: none; }
+.is-open .intro.write { clip-path: inset(-40% -20% -40% -20%); }
+
+.scene-hero > .scroll-cue {
+  top: auto; bottom: 4cqw;
+  display: flex; flex-direction: column; align-items: center; gap: 1.2cqw;
+  padding: 2cqw 4cqw; border: 0; background: none; cursor: pointer;
+  color: #fff;
+  font-family: var(--f-caps); font-size: max(10px, 2.1cqw); letter-spacing: .3em;
+  text-shadow: 0 1px 6px rgba(80, 20, 45, .6);
+}
+.scroll-cue i {
+  width: 1px; height: 6cqw; background: linear-gradient(#fff, rgba(255, 255, 255, 0));
+  animation: cue 2.2s ease-in-out infinite;
+  transform-origin: top;
+}
+@keyframes cue {
+  0% { transform: scaleY(0); opacity: 1; }
+  60% { transform: scaleY(1); opacity: 1; }
+  100% { transform: scaleY(1); opacity: 0; }
+}
+
+/* =========================================================
+   OPENING · Shri Ganeshaya Namah, then page one
+   ========================================================= */
+.ganesha {
+  position: absolute; inset: 0; z-index: 10;
+  background: #f4ebe8 url("/assets/ganesha-poster.jpg") center / cover no-repeat;
+  transition: opacity 1.5s ease, filter 1.5s ease, transform 1.8s var(--ease-out);
+}
+.ganesha-out .ganesha {
+  opacity: 0; filter: blur(10px); transform: scale(1.06);
+  pointer-events: none;
+}
+.ganesha.gone { display: none; }
+
+/* =========================================================
+   PAGES 2–5 · typography
+   ========================================================= */
+.label {
+  margin: 0 0 1.4cqw;
+  font-family: var(--f-caps); font-weight: 500;
+  font-size: max(10px, 2.35cqw); letter-spacing: .26em; text-transform: uppercase;
+  color: var(--wine-soft);
+}
+.script {
+  margin: 0; padding: 0 4cqw;
+  font-family: var(--f-script); font-weight: 400;
+  font-size: 11cqw; line-height: 1.2; white-space: nowrap;
+  color: var(--wine);
+  -webkit-text-stroke: .08cqw currentColor;
+}
+.rule {
+  position: relative; display: block; flex: none;
+  width: 34cqw; height: 1px; margin: 2.6cqw auto 4.5cqw;
+  background: linear-gradient(90deg, rgba(195, 154, 93, 0), var(--gold), rgba(195, 154, 93, 0));
+}
+.rule::after {
+  content: ""; position: absolute; left: 50%; top: 50%;
+  width: 1.3cqw; height: 1.3cqw; min-width: 5px; min-height: 5px;
+  background: var(--gold); border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.weekday { margin: 0 0 2.4cqw; font-style: italic; font-size: 4.8cqw; }
+.big-date {
+  display: flex; align-items: stretch; justify-content: center; gap: 3.4cqw;
+  font-weight: 500; line-height: 1;
+}
+.bd-num { font-size: 9cqw; }
+.bd-mid {
+  display: flex; align-items: center;
+  padding: 0 3.4cqw;
+  border-left: 1px solid rgba(142, 7, 64, .65);
+  border-right: 1px solid rgba(142, 7, 64, .65);
+  font-family: var(--f-caps); font-size: max(10px, 2.9cqw); letter-spacing: .12em; text-transform: uppercase;
+}
+
+.countdown {
+  display: flex; align-items: flex-start; justify-content: center; gap: 2.8cqw;
+  margin-top: 8cqw;
+}
+.countdown > div { display: flex; flex-direction: column; align-items: center; min-width: 10.5cqw; }
+.countdown b { font-weight: 500; font-size: 7.4cqw; line-height: 1; font-variant-numeric: tabular-nums; }
+.countdown small {
+  margin-top: 1.5cqw;
+  font-family: var(--f-caps); font-size: max(8.5px, 1.85cqw); letter-spacing: .18em; text-transform: uppercase;
+  color: var(--wine-soft);
+}
+.countdown > i { width: 1px; height: 7.5cqw; margin-top: .4cqw; background: linear-gradient(rgba(195, 154, 93, 0), var(--gold), rgba(195, 154, 93, 0)); }
+.countdown-done { margin: 8cqw 0 0; font-style: italic; font-size: 4.8cqw; }
+
+.details { margin: 0; display: grid; gap: 4cqw; }
+.details > div { display: grid; gap: .9cqw; }
+.details dt {
+  font-family: var(--f-caps); font-size: max(9.5px, 2.15cqw); letter-spacing: .3em; text-transform: uppercase;
+  color: var(--wine-soft);
+}
+.details dd { margin: 0; font-size: max(14px, 4.2cqw); line-height: 1.3; }
+.details dd small { font-size: .78em; color: #7a1a45; }
+
+.actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 2.4cqw; margin-top: 6cqw; }
+.link-btn {
+  appearance: none; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 2.2cqw 4.4cqw; min-height: 38px;
+  border: 1px solid rgba(142, 7, 64, .4); border-radius: 999px;
+  background: rgba(255, 248, 246, .6);
+  color: var(--wine); text-decoration: none;
+  font-family: var(--f-caps); font-weight: 500;
+  font-size: max(10px, 2.2cqw); letter-spacing: .14em; text-transform: uppercase;
+  transition: background .35s ease, color .35s ease, transform .35s var(--ease-out), box-shadow .35s ease;
+}
+.link-btn:hover, .link-btn:focus-visible {
+  background: var(--wine); color: var(--cream);
+  transform: translateY(-2px); box-shadow: 0 8px 20px -10px rgba(142, 7, 64, .6);
+  outline: none;
+}
+.link-btn.solid { background: var(--wine); color: var(--cream); border-color: var(--wine); }
+
+.venue { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.venue-name { margin: 0 0 1.6cqw; font-weight: 500; font-size: max(16px, 5.2cqw); line-height: 1.2; }
+.venue-address { margin: 0; font-size: max(13px, 3.4cqw); line-height: 1.45; color: #7a1a45; }
+.tba { margin: 0; font-style: italic; font-size: max(16px, 4.8cqw); line-height: 1.5; }
+.map {
+  position: relative; display: block; margin: 4.5cqw auto 0;
+  width: 78%; aspect-ratio: 1 / 1;
+  border-radius: 50% 50% 3cqw 3cqw / 42% 42% 3cqw 3cqw;
+  overflow: hidden;
+  border: 1px solid rgba(195, 154, 93, .85);
+  box-shadow: 0 0 0 1cqw rgba(255, 248, 246, .55);
+  background: #f3e3e3;
+}
+.map iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; pointer-events: none; filter: saturate(.85) sepia(.1); }
+.venue .actions { margin-top: 4.5cqw; }
+
+.closing-text { margin: 0; font-style: italic; font-size: max(14px, 4cqw); line-height: 1.6; }
+.sign { display: flex; flex-direction: column; align-items: center; margin-top: 8cqw; }
+.sign-names { font-family: var(--f-script); font-size: 9.5cqw; line-height: 1.3; white-space: nowrap; -webkit-text-stroke: .06cqw currentColor; }
+.sign-names em { font-family: var(--f-serif); font-style: italic; font-size: .45em; margin: 0 .2em; -webkit-text-stroke: 0; }
+.sign-date { margin-top: 1cqw; font-family: var(--f-caps); font-size: max(10px, 2.5cqw); letter-spacing: .3em; color: var(--wine-soft); }
+
+/* ---------- Petals, music ---------- */
+#petals { position: fixed; inset: 0; z-index: 30; pointer-events: none; width: 100%; height: 100%; }
+
+.music {
+  position: absolute; z-index: 20; right: 14px;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid rgba(195, 154, 93, .8);
+  background: rgba(255, 248, 246, .85);
+  display: grid; place-items: center; cursor: pointer;
+}
+.music .bars { display: flex; align-items: flex-end; gap: 3px; height: 16px; }
+.music .bars i { width: 3px; height: 100%; background: var(--wine); border-radius: 2px; animation: eq 1s ease-in-out infinite; transform-origin: bottom; }
+.music .bars i:nth-child(2) { animation-delay: -.4s; }
+.music .bars i:nth-child(3) { animation-delay: -.7s; }
+.music .bars i:nth-child(4) { animation-delay: -.2s; }
+.music.paused .bars i { animation: none; transform: scaleY(.3); }
+.music { animation: fade-in 1s ease 1.2s both; }
+@keyframes fade-in { from { opacity: 0; } }
+.music-hint {
+  position: absolute; right: 0; bottom: calc(100% + 8px);
+  padding: 5px 10px; border-radius: 999px; white-space: nowrap;
+  background: rgba(255, 248, 246, .9); border: 1px solid rgba(195, 154, 93, .6);
+  font-family: var(--f-caps); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--wine);
+  opacity: 0; pointer-events: none; transition: opacity .5s ease;
+}
+.music.ask .music-hint { opacity: 1; animation: breathe 2.6s ease-in-out 2s infinite; }
+.music.ask { box-shadow: 0 0 0 0 rgba(142, 7, 64, .35); animation: fade-in 1s ease 1.2s both, ping 2.2s ease-out 2s infinite; }
+@keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(142, 7, 64, .35); } 100% { box-shadow: 0 0 0 14px rgba(142, 7, 64, 0); } }
+@keyframes breathe { 50% { opacity: .55; } }
+@keyframes eq { 0%, 100% { transform: scaleY(.3); } 50% { transform: scaleY(1); } }
+
+/* ---------- Static preview / reduced motion ---------- */
+.static { scroll-behavior: auto; }
+.static .ganesha { display: none; }
+.static .intro { opacity: 1; translate: none; filter: none; clip-path: none; transition: none; }
+.static [data-a] { transition: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .intro, [data-a] { transition-duration: .01s !important; transition-delay: 0s !important; }
+  .scroll-cue i { animation: none !important; }
+  .ganesha { transition-duration: .4s; }
+}
+
+/* ---------- Password screen ---------- */
+.lock-ambient { background-image: url("/assets/ganesha-poster.jpg"); }
+.lock {
+  position: absolute; left: 12%; right: 12%; top: 22%; bottom: 22%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+  animation: lock-in 1.2s var(--ease-out) both;
+}
+.lock form { display: flex; flex-direction: column; align-items: center; gap: 4cqw; width: 100%; }
+.lock-text { margin: 0; font-style: italic; font-size: max(14px, 4cqw); line-height: 1.5; color: var(--wine); }
+.lock-input {
+  width: min(100%, 62cqw); min-height: 46px; padding: 0 18px;
+  border: 1px solid rgba(142, 7, 64, .4); border-radius: 999px;
+  background: rgba(255, 250, 248, .85);
+  color: var(--wine); text-align: center;
+  font: 500 max(16px, 4cqw) var(--f-serif); letter-spacing: .12em;
+}
+.lock-input:focus { outline: 2px solid rgba(195, 154, 93, .7); outline-offset: 2px; }
+.lock .link-btn { min-width: 46cqw; }
+.lock .link-btn:disabled { opacity: .7; cursor: default; }
+.lock-error { margin: 0; min-height: 1.4em; font-size: max(13px, 3.2cqw); color: #b3261e; }
+@keyframes lock-in { from { opacity: 0; transform: translateY(3cqw); filter: blur(6px); } }
+
+/* ---------- Save the date: the other event ---------- */
+.also {
+  margin: 7cqw 0 0;
+  font-family: var(--f-caps); font-size: max(10px, 2.5cqw); letter-spacing: .2em; text-transform: uppercase;
+  color: var(--wine-soft);
+}
+.also b { font-family: var(--f-serif); font-weight: 500; font-style: italic; text-transform: none; letter-spacing: 0; font-size: 1.5em; color: var(--wine); }
